@@ -1,0 +1,1 @@
+export const BASE_URL = "https://womansafetyapp.herokuapp.com/api/v1/";
