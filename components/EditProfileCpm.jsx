@@ -1,15 +1,24 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import {
     View, Pressable, StyleSheet, Modal, Alert,
-    StatusBar, SafeAreaView, Text, TextInput, TouchableOpacity, ScrollView, FlatList, Image
+    StatusBar, SafeAreaView, Text, TextInput, TouchableOpacity, ScrollView, FlatList, Image , Button
 } from 'react-native';
 import Circles from "./Circlebackground";
 import EditProfileinput from "./EditeProfileInput";
-
+import DatePicker from 'react-native-date-picker'
 import Smallbtn from "./Small_btn";
 const EditProfileCmp = ({ navigation }) => {
+    const [user,setUser] = useState([]);
+    useEffect(() => {
+        const get_data = async () => {
+            var user_data = await AsyncStorage.getItem('user');
+            user_data = JSON.parse(user_data);
+            setUser(user_data);
+        }
+        get_data();
+    }, []);
     return (
         <ScrollView>
             <View style={styles.screen}>
@@ -25,21 +34,10 @@ const EditProfileCmp = ({ navigation }) => {
                             <Text style={styles.h1Text}>Edit Profile</Text>
                         </View>
                         <View>
-                            <EditProfileinput backgroundColor="#CDDD8794" Text="Email Address" palceholder="seemab@gmail.com" />
-                            <EditProfileinput backgroundColor="#CDDD8794" Text="Contact Number" palceholder="Address" keyboardtype="numeric" />
-                            <EditProfileinput backgroundColor="#CDDD8794" Text="Address" palceholder="Azeem Manzil, Bottle Gali, Karachi" />
+                            <EditProfileinput backgroundColor="#CDDD8794" Text="Email Address" palceholder={user.user!=undefined? user.user.email : 'youremail@gmail.com'} defaultValue={user.user!=undefined? user.user.email : ''} />
+                            <EditProfileinput backgroundColor="#CDDD8794" Text="Contact Number" palceholder={user.user!=undefined? user.user.phone : '0335xxxxx'} keyboardtype="numeric" defaultValue={user.user!=undefined ? user.user.phone : ''} />
                         </View>
-                        <View>
-                            <Text>Birth Date</Text>
-                            <View style={styles.datebtn_view}>
-                                <Pressable style={styles.btn}><Text>Month</Text></Pressable>
-                                <Pressable style={styles.btn}><Text>Date</Text></Pressable>
-                                <Pressable style={styles.btn}><Text>Year</Text></Pressable>
-                            </View>
-                        </View>
-                        <View style={styles.btn_view}>
-                            <Smallbtn name="save" />
-                        </View>
+                        
                     </View>
                 </View>
             </View>

@@ -1,72 +1,84 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import {
     View, Pressable, StyleSheet, Modal, Alert,
     StatusBar, SafeAreaView, Text, TextInput, TouchableOpacity, ScrollView, FlatList, Image, Dimensions
 } from 'react-native';
-import {launchImageLibrary} from 'react-native-image-picker';
+import { launchImageLibrary } from 'react-native-image-picker';
 import * as ImagePicker from 'expo-image-picker';
-import * as DocumentPicker from 'expo-document-picker';
 import Circles from "./Circlebackground";
 import Profilebtn from "./Profilebtn";
 import BottomTabs from "./BottomTabs";
 import Smallbtn from "./Small_btn";
-import { BASE_URL } from "./contants";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const Addnewcontact = ({navigation}) => {
-        const [Show, setShow] = useState(true);
-        const [Visible, setVisible] = useState(true);
-        const [Fname, setFname] = useState();
-        const [surname, setSurname] = useState();
-        const [phone, setPhone] = useState();
-        const [email, setEmail] = useState();
-        const [image, setPickedImag] = useState();
-        const openGallery = async () => {
-            // ImagePicker.launchImageLibraryAsync
-            // DocumentPicker.getDocumentAsync
-            const image = await ImagePicker.launchImageLibraryAsync ({
-                // allowsEditing: true,
-                mediaTypes: ImagePicker.MediaTypeOptions.All,
-                // type:[DocumentPicker.types.allFiles]
-                // aspect: [16, 16],
-                // width:400,
-                // height:200,
-                // mediaTypes:"photo",
-                // quality: 1,
-    
-            });
-            setPickedImag(image.uri)
-            console.log(image);
+import instance from "./axios";
 
-            
-        };
-        const contactHandler = async(event) => {
-            if(image==null){
-                alert("Image Not Selected!")
-                return;
-            }
-           const  imagData = new FormData()
-           imagData.append("image",image)
-           imagData.append('name',name)
-           imagData.append('phone',phone)
-           ImageData.append('email',email)
-           await fetch('https://womansafetyapp.herokuapp.com/api/v1/contacts',{
-                method:'POST',
-                body: imagData,
-                headers:{
-                    'Content-Type': 'multipart/form-data; ',
-                }
-            }).then((response)=>response.json()).then((response)=>{
-                if(response.status==true){
-                    alert("Contact Saved")
-                }
-                console.log(response)
-            }).catch((error)=>{
-                alert("Error",error[0])
-            });
+
+const Addnewcontact = ({ navigation }) => {
+    const [Show, setShow] = useState(true);
+    const [Visible, setVisible] = useState(true);
+    const [Fname, setFname] = useState();
+    const [surname, setSurname] = useState();
+    const [phone, setPhone] = useState();
+    const [email, setEmail] = useState();
+    const [image, setPickedImag] = useState(null);
+    const [user,setUser] = useState([]);
+
+
+    const openGallery = async () => {
+        // ImagePicker.launchImageLibraryAsync
+        // DocumentPicker.getDocumentAsync
+        const image_picked = await ImagePicker.launchImageLibraryAsync({
+            allowsEditing: true,
+            mediaTypes: ImagePicker.MediaTypeOptions.All,
+            // type:[DocumentPicker.types.allFiles]
+            //aspect: [16, 16],
+            width:150,
+            height:150,
+            mediaTypes:"photo",
+            // quality: 1,
+
+        });
+        //setPickedImag(image_picked)
+         if (!image_picked.cancelled) {
+            setPickedImag(image_picked.uri);
+          }
+        console.log(image_picked,"Image Picked")
+    };
+    const contactHandler = async (event) => {
+        var data = {
+            name: Fname + " " + surname,
+            phone: phone,
+            email: email
+        }
+        const formData = new FormData();
+        formData.append('name', Fname+" "+surname);
+        formData.append('email',email);
+        formData.append('phone',phone);
         
+        instance.post("contacts",data,{
+            headers: {
+                'Authorization' : 'Bearer ' +user.access_token,
+                'Content-Type': 'application/json',
+            }
+        }).then((response)=>{
+            alert("Contact successfully added!");
+        }).catch((error)=>{
+            alert("Error in adding contact. Try again later!");
+        })
+
+
     }
+    useEffect(()=>{
+        const get_user_data = async ()=>{
+            var user_data = await AsyncStorage.getItem('user');
+            user_data = JSON.parse(user_data);
+            setUser(user_data);
+        }
+        get_user_data();
+    },[])
     return (
         <View style={styles.screen}>
             <View style={styles.main_view}>
@@ -81,14 +93,22 @@ const Addnewcontact = ({navigation}) => {
                         <Text style={styles.h1Text}>Add New Contact</Text>
                     </View>
                     <View style={styles.profileimg}>
-                        <Image style={{ width: 150, height: 150, borderRadius: 100 }} source={require("../assets/images/Ellipse-1.png")} />
+                        {
+                            user.profile_picture!=undefined ?
+                            <Image style={{ width: 150, height: 150, borderRadius: 100 }} source={user.profile_picture} />
+                            :
+                            image? 
+                            <Image style={{ width: 150, height: 150, borderRadius: 100 }} source={require("../assets/images/Ellipse-1.png")} />
+                            :
+                            <Image style={{ width: 150, height: 150, borderRadius: 100 }} source={require("../assets/images/Ellipse-1.png")} />
+                        }
                     </View>
                     <TouchableOpacity onPress={openGallery} style={styles.camimg}>
                         <Image source={require("../assets/images/cam-1.png")} />
                     </TouchableOpacity>
                     <View style={{ marginTop: '60%' }}>
                         <View style={styles.inputView}>
-                        <MaterialCommunityIcons name={'account-circle-outline'}
+                            <MaterialCommunityIcons name={'account-circle-outline'}
                                 size={26}
                                 color="#837B7B"
                                 marginRight={100}
@@ -98,7 +118,7 @@ const Addnewcontact = ({navigation}) => {
                                 autoCapitalize="none"
                                 autoCorrect={false}
                                 value={Fname}
-                                onChangeText={(Fname)=>setFname(Fname)}
+                                onChangeText={(Fname) => setFname(Fname)}
                                 placeholder="First name"
                             />
                         </View>
@@ -113,7 +133,7 @@ const Addnewcontact = ({navigation}) => {
                                 autoCapitalize="none"
                                 autoCorrect={false}
                                 value={surname}
-                                onChangeText={(surname)=>setSurname(surname)}
+                                onChangeText={(surname) => setSurname(surname)}
                                 placeholder="Sure name"
                                 secureTextEntry={false}
                             // keyboardType="numeric"
@@ -131,7 +151,7 @@ const Addnewcontact = ({navigation}) => {
                                 autoCapitalize="none"
                                 autoCorrect={false}
                                 value={phone}
-                                onChangeText={(phone)=>setPhone(phone)}
+                                onChangeText={(phone) => setPhone(phone)}
                                 placeholder="Phone"
                                 secureTextEntry={false}
                                 keyboardType="numeric"
@@ -145,17 +165,17 @@ const Addnewcontact = ({navigation}) => {
                                 autoCapitalize="none"
                                 autoCorrect={false}
                                 value={email}
-                                onChangeText={(email)=>setEmail(email)}
+                                onChangeText={(email) => setEmail(email)}
                                 placeholder="Email ID"
-                                // secureTextEntry={true}
+                            // secureTextEntry={true}
                             // keyboardType="numeric"
                             />
                         </View>
                     </View>
                     <View style={styles.btn_view}>
-                        <Smallbtn  name="cancel" callParent={()=>navigation.goBack()}/>
-                        <Smallbtn callParent={contactHandler} name="save"/>
-                    
+                        <Smallbtn name="cancel" callParent={() => navigation.goBack()} />
+                        <Smallbtn callParent={contactHandler} name="save" />
+
                     </View>
                 </View>
             </View>
@@ -174,8 +194,8 @@ const styles = StyleSheet.create({
         padding: 10,
         paddingTop: 40
     },
-    h1_view:{
-        justifyContent:"center",
+    h1_view: {
+        justifyContent: "center",
         position: "absolute",
         left: 40,
         top: 110,
@@ -192,8 +212,8 @@ const styles = StyleSheet.create({
     },
     camimg: {
         position: "absolute",
-        top: "39%",
-        left: "58%"
+        top: "50%",
+        left: "65%"
     },
     inputView: {
         flexDirection: "row",
@@ -218,12 +238,12 @@ const styles = StyleSheet.create({
         width: 24,
         height: 24
     },
-   
-    btn_view:{
-        width:"100%",
-        marginTop:20,
-        flexDirection:"row",
-        justifyContent:"space-around"
+
+    btn_view: {
+        width: "100%",
+        marginTop: 20,
+        flexDirection: "row",
+        justifyContent: "space-around"
     }
 
 

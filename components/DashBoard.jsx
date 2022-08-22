@@ -1,13 +1,26 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import {
     View, Pressable, StyleSheet, Modal, Alert,
     StatusBar, SafeAreaView, Text, TextInput, Linking, TouchableOpacity, ScrollView, FlatList, Image
 } from 'react-native';
+import ContactList from "./ContactList";
+
+import instance from "./axios";
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+
 const DashBoard = ({ navigation }) => {
+
+    const [contacts, setContacts] = useState([]);
+    const [user_data,setUser]=useState([]);
+
+    const [simpleContacts,setSimpleContacts]=useState([]);
+    
     var number
-    const makeCall = (number) => {
+    const makeCall = async (number) => {
 
         let phoneNumber = '';
 
@@ -16,11 +29,51 @@ const DashBoard = ({ navigation }) => {
         } else {
             phoneNumber = `telprompt:${number}`;
         }
+
+        // instance.post('make-a-call',{
+        //     'number': number
+        // }, {
+        //     headers:{
+        //         'Authorization': 'Bearer ' + user_data.access_token
+        //     }
+        // }).then((response) => {
+        //     console.log(response.data.calling_record);
+        //     alert("DD");
+        //     Linking.openURL(phoneNumber);
+        // });
+
         Linking.openURL(phoneNumber);
+        
     };
     const Setting = () => {
         navigation.navigate('Setting')
     }
+    useEffect(() => {
+        const get_data = async () => {
+            var user = await AsyncStorage.getItem('user');
+            user = JSON.parse(user);
+            instance.get('emergency_contacts', {
+                headers: {
+                    'Authorization': 'Bearer ' + user.access_token
+                }
+            }).then((response) => {
+                setContacts(response.data.contacts);
+                console.log(response.data.contacts, "####CONTACTS#######");
+                setUser(user);
+            });
+            instance.get('contacts', {
+                headers: {
+                    'Authorization': 'Bearer ' + user.access_token
+                }
+            }).then((response) => {
+                setSimpleContacts(response.data.contacts);
+            }).catch((error)=>{
+
+            });
+        }
+        get_data();
+    }, []);
+
     return (
         <View style={styles.screen}>
             <View style={styles.main_view}>
@@ -60,49 +113,28 @@ const DashBoard = ({ navigation }) => {
                 </View>
                 {/* </View> */}
                 <View style={styles.call_view}>
-                    <TouchableOpacity style={styles.main_btn} onPress={()=>navigation.navigate("LiveChat")} >
+                    <TouchableOpacity style={styles.main_btn} onPress={() => navigation.navigate("LiveChat")} >
                         <MaterialCommunityIcons name='chat-processing-outline' color="#FFFFFF" size={60} />
                         <Text style={{ textAlign: "center", color: "#FFFFFF" }}>Emergency Live Chat</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => makeCall(number = 1122)} style={styles.main_btn} >
-                        <View style={{ flexDirection: "row", justifyContent: "center" }}>
-                            <MaterialCommunityIcons name='phone-in-talk-outline' color="#FFFFFF" size={60} />
-                            <Text style={{ textAlign: "center", fontSize: 24, alignSelf: "center", color: "white", fontWeight: "600" }}>1122</Text>
-                        </View>
-                        <Text style={{ textAlign: "center", color: "#FFFFFF" }}>Call Rescue</Text>
-                    </TouchableOpacity>
+                    {
+                        contacts.map((item) => {
+                            return (
+                                <TouchableOpacity onPress={() => makeCall(number = item.phone )} style={styles.main_btn} >
+                                    <View style={{ flexDirection: "row", justifyContent: "center" }}>
+                                        <MaterialCommunityIcons name='phone-in-talk-outline' color="#FFFFFF" size={60} />
+                                        <Text style={{ textAlign: "center", fontSize: 24, alignSelf: "center", color: "white", fontWeight: "600" }}>{item.phone}</Text>
+                                    </View>
+                                    <Text style={{ textAlign: "center", color: "#FFFFFF" }}>{item.title}</Text>
+                                </TouchableOpacity>
+                            )
+                        })
+                    }
+
                 </View>
-                <View style={styles.call_view}>
-                    <TouchableOpacity onPress={() => makeCall(number = 1124)} style={styles.main_btn} >
-                        <View style={{ flexDirection: "row", justifyContent: "center" }}>
-                            <MaterialCommunityIcons name='phone-in-talk-outline' color="#FFFFFF" size={60} />
-                            <Text style={{ textAlign: "center", fontSize: 24, alignSelf: "center", color: "white", fontWeight: "600" }}>1124</Text>
-                        </View>
-                        <Text style={{ textAlign: "center", color: "#FFFFFF" }}>Punjab Highway Patrol</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => makeCall(number = 130)} style={styles.main_btn} >
-                        <View style={{ flexDirection: "row", justifyContent: "center" }}>
-                            <MaterialCommunityIcons name='phone-in-talk-outline' color="#FFFFFF" size={60} />
-                            <Text style={{ textAlign: "center", fontSize: 24, alignSelf: "center", color: "white", fontWeight: "600" }}>130</Text>
-                        </View>
-                        <Text style={{ textAlign: "center", color: "#FFFFFF" }}>Motorway Police</Text>
-                    </TouchableOpacity>
-                </View>
-                <View style={styles.call_view}>
-                    <TouchableOpacity onPress={() => makeCall(number = 1143)} style={styles.main_btn} >
-                        <View style={{ flexDirection: "row", justifyContent: "center" }}>
-                            <MaterialCommunityIcons name='phone-in-talk-outline' color="#FFFFFF" size={60} />
-                            <Text style={{ textAlign: "center", fontSize: 24, alignSelf: "center", color: "white", fontWeight: "600" }}>1043</Text>
-                        </View>
-                        <Text style={{ textAlign: "center", color: "#FFFFFF" }}>Punjab Commision on the Statue of Women</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => makeCall(number = 1991)} style={styles.main_btn} >
-                        <View style={{ flexDirection: "row", justifyContent: "center" }}>
-                            <MaterialCommunityIcons name='phone-in-talk-outline' color="#FFFFFF" size={60} />
-                            <Text style={{ textAlign: "center", fontSize: 24, alignSelf: "center", color: "white", fontWeight: "600" }}>1991</Text>
-                        </View>
-                        <Text style={{ textAlign: "center", color: "#FFFFFF" }}>Cyber Crime Helpline</Text>
-                    </TouchableOpacity>
+
+                <View>
+                    <ContactList contacts={simpleContacts} />
                 </View>
             </ScrollView>
         </View>
@@ -169,15 +201,22 @@ const styles = StyleSheet.create({
 
     },
     main_btn: {
-        width: 150,
+        width: '45%',
         backgroundColor: "#A8B768",
         alignItems: "center",
         borderRadius: 26,
-        padding: 10
+        padding: 15,
+        marginTop: 20,
+        marginLeft: 10
+
     },
     call_view: {
         marginTop: 15,
         flexDirection: "row",
-        justifyContent: "space-evenly"
+        justifyContent: "space-evenly",
+        flex: 1,
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        padding: 10
     }
 })

@@ -9,8 +9,9 @@ const EditProfileinput=(props)=>{
             autoCapitalize="none"
             autoCorrect={false}
             // onChangeText={onChangeNumber}
-            // value={number}
+            value={props.defaultValue}
             placeholder={props.palceholder}
+            defaultValue = {props.defaultValue?? ''}
 
         keyboardType={props.keyboardtype}
         />

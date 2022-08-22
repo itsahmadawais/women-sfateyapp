@@ -27,6 +27,7 @@ const  HomeScreen=()=> {
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons name="home" color="#837B7B" size={26} />
           ),
+          unmountOnBlur: true
         }}
       />
       <Tab.Screen name="contact" component={ContactScreen}
@@ -36,7 +37,9 @@ const  HomeScreen=()=> {
           tabBarLabel: false,
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons name="phone-in-talk-outline" color="#837B7B" size={26} />
-          ),}}
+          ),
+          unmountOnBlur: true
+        }}
        />
       {/* <Tab.Screen name="profil" component={AwarnessScreen}
 
@@ -55,6 +58,7 @@ const  HomeScreen=()=> {
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons name='information'  color="#837B7B" size={26} />
           ),
+          unmountOnBlur: true
           }}
        />
        <Tab.Screen name="profile" component={ProfileScreen}
@@ -64,7 +68,9 @@ const  HomeScreen=()=> {
           tabBarLabel: false,
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons name="account-circle-outline" color="#837B7B" size={26} />
-          ),}}
+          ),
+          unmountOnBlur: true
+        }}
        />
     </Tab.Navigator>
   );

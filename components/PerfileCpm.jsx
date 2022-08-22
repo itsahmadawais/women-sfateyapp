@@ -6,10 +6,10 @@ import Circles from "./Circlebackground";
 import Profilebtn from "./Profilebtn";
 import BottomTabs from "./BottomTabs";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { BASE_URL } from "./contants";
-import {launchImageLibrary} from 'react-native-image-picker';
 import * as ImagePicker from 'expo-image-picker';
-import * as DocumentPicker from 'expo-document-picker';
+
+import instance from "./axios";
+
 const ProfileCpm = (props) => {
     const [user, setUser] = useState([]);
     const [image, setPickedImag] = useState(null);
@@ -17,44 +17,37 @@ const ProfileCpm = (props) => {
         // ImagePicker.launchImageLibraryAsync
         // DocumentPicker.getDocumentAsync
         const image_picked = await ImagePicker.launchImageLibraryAsync({
-            // allowsEditing: true,
+            allowsEditing: true,
             mediaTypes: ImagePicker.MediaTypeOptions.All,
             // type:[DocumentPicker.types.allFiles]
-            // aspect: [16, 16],
-            // width:400,
-            // height:200,
-            // mediaTypes:"photo",
+            //aspect: [16, 16],
+            width:150,
+            height:150,
+            mediaTypes:"photo",
             // quality: 1,
 
         });
         //setPickedImag(image_picked)
+         if (!image_picked.cancelled) {
+            setPickedImag(image_picked.uri);
+          }
         console.log(image_picked,"Image Picked")
     };
     const LogoutHandler = async (event) => {
-        let Result = await fetch(BASE_URL + 'user/logout', {
-            method: 'GET',
-            // body:JSON.stringify(data),
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
+        instance.post('logout',{
+            headers:{
+                'Authorization' : 'Bearer '+user.access_token
+            }
+        }).then(async (response)=>{
+            try {
+                await AsyncStorage.clear()
+                await AsyncStorage.setItem('is_first_time', 'false')
+                alert("Logged out!")
+            } catch (e) {
+                // clear error
+                alert("Unable to log out!")
             }
         });
-        Result = await Result.json()
-        if (Result.success === true) {
-            props.navigation.navigate('login')
-            clearAll = async () => {
-                try {
-                    await AsyncStorage.clear()
-                    await AsyncStorage.setItem('is_first_time', 'false')
-                } catch (e) {
-                    // clear error
-                }
-
-                console.log('Done.')
-            }
-
-        }
-        console.log(Result)
     }
     const EditProfile = () => {
         props.navigation.navigate('EditProfileScreen')
@@ -86,16 +79,12 @@ const ProfileCpm = (props) => {
                     </View>
                     <View style={styles.profileimg}>
                         {
-                            image!=null && image.uri!==undefined ?
-                            <Image style={{ width: 150, height: 150, borderRadius: 100 }} source={{uri: uri}} />
-                            :
-                            (
-                                user.avatar==undefined? 
-                                <Image style={{ width: 150, height: 150, borderRadius: 100 }} source={{uri: user.avatar}} />
-                                :
-                                <Image style={{ width: 150, height: 150, borderRadius: 100 }} source={require("../assets/images/Ellipse-1.png")} />
-                            )
+                        image?
+                        <Image source={{ uri: image }} style={{ width: 150, height: 150, borderRadius: 100 }} />
+                        :
+                        <Image style={{ width: 150, height: 150, borderRadius: 100 }} source={require("../assets/images/Ellipse-1.png")} />
                         }
+                        
                     </View>
                     <View style={styles.camimg} >
                         <TouchableOpacity onPress={openGallery}>

@@ -7,21 +7,39 @@ import {
 } from 'react-native';
 import Circles from "./Circlebackground";
 import AwarenessTouchable from "./AwarenesTouchable";
+import Loader from "./Loader";
+
+import instance from "./axios";
+
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 const AwarenesCmp = (props) => {
     var navigation=props.navigation
-    const [Product, SetProduct] = useState();
+    const [articles,setArticles]= useState([]);
+    const [user,setUser]= useState([]);
+    const [loader,setLoader] =useState(true);
     const getBlogApi = async () => {
-        const response = await fetch('https://womansafetyapp.herokuapp.com/api/v1/blog');
-        const data = await response.json();
-        var productData = data.data;
-        SetProduct(productData);
+        var user_data = await AsyncStorage.getItem('user');
+        user_data = JSON.parse(user_data);
+        setUser(user_data);
+        instance.get('blogs',{
+            headers:{
+                'Authorization' : 'Bearer '+ user_data.access_token
+            }
+        }).then((response)=>{
+            setArticles(response.data.blogs);
+        })
     }
      useEffect(() => {
         setTimeout(()=>{
             getBlogApi();
         },1000)
         }, []);
-        console.log("artical",Product);
+    const navigationHandler = (item)=>{
+        navigation.navigate("AwarenessSingle",{
+            data: item
+        });
+    }
     return (
         <View style={styles.screen}>
             <View style={styles.main_view}>
@@ -30,35 +48,21 @@ const AwarenesCmp = (props) => {
                     <View style={styles.h1_view}>
                         <Text style={styles.h1Text}>Awareness</Text>
                     </View>
-                    {Product?Product.map((item,index)=>{
+                    {articles?articles.map((item,index)=>{
                         {/* console.log("itemnum",item) */}
                         return(
-                    <View style={styles.toucable_main_view1}>
-                        <AwarenessTouchable image={require("../assets/images/Rectangle-13.png")}
-                            Text={item.content}
-                            navigation={navigation}
-                        />
-                    
-                        {/* <AwarenessTouchable image={require("../assets/images/Rectangl-38.png")}
-                            Text="legislation to tackle acid attack and burn case section 428."
-                            navigation={navigation}
-                        /> */}
-                        </View>
+                            <View style={styles.toucable_main_view1}>
+                                <AwarenessTouchable image={item.photo}
+                                    Text={item.title}
+                                    navigation={navigation}
+                                    navigationHandler={()=>navigationHandler(item)}
+                                />
+                            </View>
                         )
                     }):<Text></Text>}
-                        {/* <View style={styles.toucable_main_view2}>
-                        <AwarenessTouchable image={require("../assets/images/Rectangle-13.png")}
-                            Text="The Protection against Harassment of Women at the Workplace Act 2010"
-                            navigation={navigation}
-                        />
-                        <AwarenessTouchable image={require("../assets/images/Rectangle-13.png")}
-                            Text="The Protection against Harassment of Women at the Workplace Act 2010"
-                            navigation={navigation}
-                        />
-
-                    </View> */}
                 </View>
             </View>
+            <Loader loader={loader}/>
         </View>
     );
 }

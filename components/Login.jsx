@@ -7,7 +7,9 @@ import {
     , Linking
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { BASE_URL } from "./contants";
+
+import instance from './axios';
+
 const Login = (props) => {
     const [Show, setShow] = useState(true);
     const [Visible, setVisible] = useState(true);
@@ -23,40 +25,33 @@ const Login = (props) => {
             Alert.alert("Invalid Credentials", "Please enter valid login details.");
         }
         else {
-            let data = { email, password }
-            // https://cors-anywhere.herokuapp.com/
-            let Result = await fetch(BASE_URL + 'user/login', {
-                method: 'POST',
-                body: JSON.stringify(data),
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+            instance.post('auth/login',{
+                email: email,
+                password: password
+            }).then(async (response)=>{
+                setLoading(false)
+                if(response.status==200){
+                    try {
+                        await AsyncStorage.setItem(
+                        'user',
+                        JSON.stringify(response.data)
+                        );
+                        await AsyncStorage.setItem(
+                            'isLoggedIn',
+                            "true"
+                        );
+                    } catch (error) {
+                        // Error saving data
+                    }
+                    props.navigation.push('Home')
                 }
-            });
-            Result = await Result.json()
-            console.log(Result,"#JSON")
-            //  value=Result.success
-
-            if (Result.success === true) {
+                else{
+                    alert('Please check your email or password and try again!');
+                }
+            }).catch((error)=>{
                 setLoading(false)
-                try {
-                    await AsyncStorage.setItem(
-                      'user',
-                      JSON.stringify(Result.user)
-                    );
-                    await AsyncStorage.setItem(
-                        'isLoggedIn',
-                        "true"
-                      );
-                  } catch (error) {
-                    // Error saving data
-                  }
-                props.navigation.push('Home')
-            }
-            else {
-                setLoading(false)
-                alert(Result[0].message)
-            }
+                alert("Error in loggin in. You can try again!");
+            })
         }
     }
     useEffect(()=>{
@@ -127,20 +122,7 @@ const Login = (props) => {
                                 <Text style={styles.logintext}>Login</Text>
                             </Pressable>
                         </View>
-                        {/* <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20, marginBottom: 20 }}>
-                        <View style={{ flex: 1, height: 1, backgroundColor: 'black' }} />
-                        <View>
-                            <Text style={{ width: 50, textAlign: 'center' }}>OR</Text>
-                        </View>
-                        <View style={{ flex: 1, height: 1, backgroundColor: 'black' }} />
-                    </View>
-                    <View style={styles.signinbtnarea}>
-                        <Pressable  style={styles.btnsignin}>
-                            <Image style={styles.googleimg} source={require("../assets/images/icons_google.png")} />
-                            <Text style={styles.signintext}>Login With Google</Text>
-                        </Pressable>
 
-                    </View> */}
                         <Text style={{ textAlign: "center", marginTop: 35 }}>
                             New to women’s safety? {' '}
                             <Text
@@ -255,8 +237,7 @@ const Login = (props) => {
 export default Login;
 const styles = StyleSheet.create({
     screen: {
-        flex: 1,
-        marginTop: StatusBar.currentHeight || 0,
+        flex: 1
     },
     main_view: {
         width: "100%",

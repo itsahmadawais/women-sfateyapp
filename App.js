@@ -22,6 +22,7 @@ import OTPScreen from './screens/OTP';
 import React,{useEffect,useState} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LiveChatWidget from './screens/LiveChatWidget';
+import AwarenessSingle from './screens/AwarenessSingle';
 
 export default function App() {
   var isLoggedIn
@@ -63,6 +64,7 @@ const Stack = createNativeStackNavigator();
         <Stack.Screen name="ChangePassScreen" component={ChangePassScreen}/> 
         <Stack.Screen name="Privacy_Policy" component={PrivacyPolicyScreen}/>
         <Stack.Screen name="LiveChat" component={LiveChatWidget}/>
+        <Stack.Screen name="AwarenessSingle" component={AwarenessSingle}/>
        {/* <Stack.Screen name="Aware" component={AwarnessScreen}/>  */}
       </Stack.Navigator>
     

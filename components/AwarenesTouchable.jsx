@@ -3,8 +3,8 @@ import React from "react";
 import { Text, TouchableOpacity,Image, StyleSheet, } from 'react-native';
 const AwarenessTouchable = (props) => {
     return (<>
-        <TouchableOpacity style={styles.tochable_sub_view} >
-            <Image style={styles.toucable_img} source={props.image} />
+        <TouchableOpacity style={styles.tochable_sub_view} onPress={props.navigationHandler}>
+            <Image style={styles.toucable_img} source={{uri: props.image}} />
             <Text style={styles.tochable_text}>
             {props.Text}
             </Text>
